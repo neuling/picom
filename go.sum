@@ -1,0 +1,12 @@
+github.com/dchote/go-openal v0.0.0-20171116030048-f4a9a141d372 h1:tz3KnXWtRZR0RWOfcMNOw+HHezWLQa7vfSOWTtKjchI=
+github.com/dchote/go-openal v0.0.0-20171116030048-f4a9a141d372/go.mod h1:74z+CYu2/mx4N+mcIS/rsvfAxBPBV9uv8zRAnwyFkdI=
+github.com/dchote/gpio v0.0.0-20160912012454-03d78156ad1a h1:jKxCPhfvlr7nVg1GrWAEhJT1m6H1QJJy9YeuSGrMMwk=
+github.com/dchote/gpio v0.0.0-20160912012454-03d78156ad1a/go.mod h1:BRl23nR0S8U8dYKPYSOosARhdUViXvyLl4PXDvUDAhw=
+github.com/golang/protobuf v1.3.1 h1:YF8+flBXS5eO826T4nzqPrxfhQThhXl0YzfuUPu4SBg=
+github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
+github.com/neuling/gumble v0.0.0-20210122181047-8d9b4f64c921 h1:XY7GMC8IjzZ3UcNOV6vVQQ6PHAB4sK97932uB1Zyrjg=
+github.com/neuling/gumble v0.0.0-20210122181047-8d9b4f64c921/go.mod h1:XNOrFBjig4BQBFQT89YYDGr7KEgPNXg04xCup5S+lQs=
+github.com/stianeikeland/go-rpio v4.2.0+incompatible h1:CUOlIxdJdT+H1obJPsmg8byu7jMSECLfAN9zynm5QGo=
+github.com/stianeikeland/go-rpio v4.2.0+incompatible/go.mod h1:Sh81rdJwD96E2wja2Gd7rrKM+XZ9LrwvN2w4IXrqLR8=
+layeh.com/gopus v0.0.0-20161224163843-0ebf989153aa h1:WNU4LYsgD2UHxgKgB36mL6iMAMOvr127alafSlgBbiA=
+layeh.com/gopus v0.0.0-20161224163843-0ebf989153aa/go.mod h1:AOef7vHz0+v4sWwJnr0jSyHiX/1NgsMoaxl+rEPz/I0=
