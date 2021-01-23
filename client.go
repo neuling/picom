@@ -37,6 +37,8 @@ func main() {
 	username := flag.String("username", "", "the username of the client")
 	password := flag.String("password", "", "the password of the server")
 
+	flag.Parse()
+
 	tlsConfig := &tls.Config{ InsecureSkipVerify: true }
 
 	gumbleConfig := gumble.NewConfig()
