@@ -8,11 +8,14 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"flag"
+	"encoding/binary"
 	"github.com/neuling/gumble/gumble"
 	"github.com/neuling/gumble/gumbleutil"
 	"github.com/neuling/gumble/gumbleopenal"
 	"github.com/dchote/gpio"
 	"github.com/stianeikeland/go-rpio"
+	"github.com/dchote/go-openal/openal"
 	_ "github.com/neuling/gumble/opus"
 )
 
@@ -30,18 +33,23 @@ type Intercom struct {
 func main() {
 	fmt.Println("Hello, world.")
 
+	// server := flag.String("server", "localhost:64738", "the server to connect to")
+	username := flag.String("username", "", "the username of the client")
+	password := flag.String("password", "", "the password of the server")
+
 	tlsConfig := &tls.Config{ InsecureSkipVerify: true }
 
 	gumbleConfig := gumble.NewConfig()
 
 	gumbleConfig.Attach(gumbleutil.AutoBitrate)
 
-	gumbleConfig.Username = "Client1"
-	gumbleConfig.Password = "1nt3rc0m"
+	gumbleConfig.Username = *username
+	gumbleConfig.Password = *password
 
 	intercom := Intercom{}
 
 	gumbleConfig.Attach(&intercom)
+	gumbleConfig.AttachAudio(&intercom)
 
 	client, _ := gumble.DialWithDialer(new(net.Dialer), "moritz.pro:64738", gumbleConfig, tlsConfig)
 
@@ -142,5 +150,45 @@ func (i *Intercom) OnContextActionChange(e *gumble.ContextActionChangeEvent) {
 }
 
 func (i *Intercom) OnServerConfig(e *gumble.ServerConfigEvent) {
+}
+
+func (i *Intercom) OnAudioStream(e *gumble.AudioStreamEvent) {
+	fmt.Println("asads …")
+	go func() {
+		source := openal.NewSource()
+		emptyBufs := openal.NewBuffers(8)
+		reclaim := func() {
+			if n := source.BuffersProcessed(); n > 0 {
+				reclaimedBufs := make(openal.Buffers, n)
+				source.UnqueueBuffers(reclaimedBufs)
+				emptyBufs = append(emptyBufs, reclaimedBufs...)
+			}
+		}
+		var raw [gumble.AudioMaximumFrameSize * 2]byte
+		for packet := range e.C {
+			samples := len(packet.AudioBuffer)
+			if samples > cap(raw) {
+				continue
+			}
+			for i, value := range packet.AudioBuffer {
+				binary.LittleEndian.PutUint16(raw[i*2:], uint16(value))
+			}
+			reclaim()
+			if len(emptyBufs) == 0 {
+				continue
+			}
+			last := len(emptyBufs) - 1
+			buffer := emptyBufs[last]
+			emptyBufs = emptyBufs[:last]
+			buffer.SetData(openal.FormatMono16, raw[:samples*2], gumble.AudioSampleRate)
+			source.QueueBuffer(buffer)
+			if source.State() != openal.Playing {
+				source.Play()
+			}
+		}
+		reclaim()
+		emptyBufs.Delete()
+		source.Delete()
+	}()
 }
 
