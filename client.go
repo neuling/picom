@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 	"flag"
+	_ "log"
 	"encoding/binary"
 	"github.com/neuling/gumble/gumble"
 	"github.com/neuling/gumble/gumbleutil"
@@ -16,12 +17,15 @@ import (
 	"github.com/dchote/gpio"
 	"github.com/stianeikeland/go-rpio"
 	"github.com/dchote/go-openal/openal"
+	"github.com/neuling/volume-go"
 	_ "github.com/neuling/gumble/opus"
 )
 
 type Intercom struct {
 	Stream *gumbleopenal.Stream
 	Client *gumble.Client
+
+	Volume int
 
 	GPIOEnabled     bool
 	Button  gpio.Pin
@@ -49,6 +53,9 @@ func main() {
 	gumbleConfig.Password = *password
 
 	intercom := Intercom{}
+
+	v, _ := volume.GetVolume()
+	intercom.Volume = v
 
 	gumbleConfig.Attach(&intercom)
 	gumbleConfig.AttachAudio(&intercom)
@@ -106,9 +113,13 @@ func (i *Intercom) initGPIO() {
 				if i.Stream != nil {
 					if i.ButtonState == 1 {
 						fmt.Printf("Button is released\n")
+						volume.SetVolume(i.Volume)
 						i.Stream.StopSource()
 					} else {
 						fmt.Printf("Button is pressed\n")
+						v, _ := volume.GetVolume()
+						i.Volume = v
+						volume.SetVolume(60)
 						i.Stream.StartSource()
 					}
 				}
@@ -124,10 +135,6 @@ func (i *Intercom) OnDisconnect(e *gumble.DisconnectEvent) {
 }
 
 func (i *Intercom) OnTextMessage(e *gumble.TextMessageEvent) {
-
-	fmt.Println(e.Message)
-	if e.Message == "<p>start</p>" { i.Stream.StartSource() }
-	if e.Message == "<p>stop</p>" { i.Stream.StopSource() }
 }
 
 func (i *Intercom) OnUserChange(e *gumble.UserChangeEvent) {
@@ -156,6 +163,7 @@ func (i *Intercom) OnServerConfig(e *gumble.ServerConfigEvent) {
 
 func (i *Intercom) OnAudioStream(e *gumble.AudioStreamEvent) {
 	fmt.Println("asads …")
+
 	go func() {
 		source := openal.NewSource()
 		emptyBufs := openal.NewBuffers(8)
