@@ -1,24 +1,26 @@
 package main
 
 import (
+	"bufio"
+	"crypto/tls"
+	"encoding/binary"
+	"flag"
 	"fmt"
+	_ "log"
 	"net"
 	"os"
-	"crypto/tls"
 	"os/signal"
 	"syscall"
 	"time"
-	"flag"
-	_ "log"
-	"encoding/binary"
-	"github.com/neuling/gumble/gumble"
-	"github.com/neuling/gumble/gumbleutil"
-	"github.com/neuling/gumble/gumbleopenal"
-	"github.com/dchote/gpio"
-	"github.com/stianeikeland/go-rpio"
+
 	"github.com/dchote/go-openal/openal"
-	"github.com/neuling/volume-go"
+	"github.com/dchote/gpio"
+	"github.com/neuling/gumble/gumble"
+	"github.com/neuling/gumble/gumbleopenal"
+	"github.com/neuling/gumble/gumbleutil"
 	_ "github.com/neuling/gumble/opus"
+	"github.com/neuling/volume-go"
+	"github.com/stianeikeland/go-rpio"
 )
 
 type Intercom struct {
@@ -27,23 +29,33 @@ type Intercom struct {
 
 	Volume int
 
-	GPIOEnabled     bool
-	Button  gpio.Pin
-	ButtonState     uint
+	GPIOEnabled    bool
+	Button         gpio.Pin
+	ButtonState    uint
 	IsTransmitting bool
 }
 
-
 func main() {
-	fmt.Println("Hello, world.")
+	fmt.Println("Starting client …")
 
-	// server := flag.String("server", "localhost:64738", "the server to connect to")
-	username := flag.String("username", "", "the username of the client")
-	password := flag.String("password", "", "the password of the server")
+	config := []string{"", "", ""}
+
+	f, _ := os.Open(".picom")
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		config = append(config, scanner.Text())
+	}
+
+	server := flag.String("server", config[0], "server name and port to connect")
+	username := flag.String("username", config[1], "the username of the client")
+	password := flag.String("password", config[2], "the password of the server")
 
 	flag.Parse()
 
-	tlsConfig := &tls.Config{ InsecureSkipVerify: true }
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 
 	gumbleConfig := gumble.NewConfig()
 
@@ -60,7 +72,7 @@ func main() {
 	gumbleConfig.Attach(&intercom)
 	gumbleConfig.AttachAudio(&intercom)
 
-	client, _ := gumble.DialWithDialer(new(net.Dialer), "moritz.pro:64738", gumbleConfig, tlsConfig)
+	client, _ := gumble.DialWithDialer(new(net.Dialer), *server, gumbleConfig, tlsConfig)
 
 	if stream, err := gumbleopenal.New(intercom.Client); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -201,4 +213,3 @@ func (i *Intercom) OnAudioStream(e *gumble.AudioStreamEvent) {
 		source.Delete()
 	}()
 }
-
