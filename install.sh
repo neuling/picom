@@ -33,4 +33,6 @@ go build -o /home/pi/bin/picom-client /home/pi/go/src/github.com/neuling/picom/c
 go build -o /home/pi/bin/picom-setup-server /home/pi/go/src/github.com/neuling/picom-iot/cmd/server/server.go
 go build -o /home/pi/bin/picom-reset /home/pi/go/src/github.com/neuling/picom-iot/cmd/wifi-reset/wifi-reset.go
 
+echo "Rebooting in setup mode …"
+
 reboot
