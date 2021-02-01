@@ -35,4 +35,4 @@ go build -o /home/pi/bin/picom-reset /home/pi/go/src/github.com/neuling/picom-io
 
 echo "Rebooting in setup mode …"
 
-reboot
+./bin/picom-reset
