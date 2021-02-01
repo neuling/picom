@@ -40,7 +40,7 @@ func main() {
 
 	config := []string{"", "", ""}
 
-	f, _ := os.Open(".picom")
+	f, _ := os.Open("/home/pi/.picom")
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
@@ -49,9 +49,9 @@ func main() {
 		config = append(config, scanner.Text())
 	}
 
-	server := flag.String("server", config[0], "server name and port to connect")
-	username := flag.String("username", config[1], "the username of the client")
-	password := flag.String("password", config[2], "the password of the server")
+	server := flag.String("server", config[3], "server name and port to connect")
+	username := flag.String("username", config[4], "the username of the client")
+	password := flag.String("password", config[5], "the password of the server")
 
 	flag.Parse()
 
