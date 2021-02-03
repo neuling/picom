@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 echo "Updating Apt …"
 
 apt-get update -y
@@ -22,6 +22,12 @@ apt-get install golang libopenal-dev libopus-dev dnsmasq hostapd -y
 systemctl unmask hostapd.service
 
 echo "Installing PICOM & PICOM-IoT …"
+
+wget https://raw.githubusercontent.com/neuling/picom/master/picom-client.service
+wget https://raw.githubusercontent.com/neuling/picom/master/picom-setup-server.service
+
+mv picom-client.service /etc/systemd/system/picom-client.service
+mv picom-setup-server.service /etc/systemd/system/picom-setup-server.service
 
 go get github.com/neuling/picom-iot
 go get github.com/neuling/picom

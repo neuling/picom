@@ -1,0 +1,14 @@
+[Unit]
+Description=PICOM Setup Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=pi
+ExecStart=/home/pi/bin/picom-setup-server
+
+[Install]
+WantedBy=multi-user.target
