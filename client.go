@@ -1,15 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"encoding/binary"
 	"flag"
 	"fmt"
-	_ "log"
+	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"os/signal"
+	"os/user"
+	"strings"
 	"syscall"
 	"time"
 
@@ -31,6 +33,7 @@ type Intercom struct {
 
 	GPIOEnabled    bool
 	Button         gpio.Pin
+	Led            rpio.Pin
 	ButtonState    uint
 	IsTransmitting bool
 }
@@ -38,20 +41,27 @@ type Intercom struct {
 func main() {
 	fmt.Println("Starting client …")
 
-	config := []string{"", "", ""}
-
-	f, _ := os.Open("/home/pi/.picom")
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-
-	for scanner.Scan() {
-		config = append(config, scanner.Text())
+	usr, usrErr := user.Current()
+	if usrErr != nil {
+		log.Fatal(usrErr)
 	}
 
-	server := flag.String("server", config[3], "server name and port to connect")
-	username := flag.String("username", config[4], "the username of the client")
-	password := flag.String("password", config[5], "the password of the server")
+	configPath := fmt.Sprintf("%s/.picom", usr.HomeDir)
+	configBuf, configReadError := ioutil.ReadFile(configPath)
+
+	if configReadError != nil {
+		log.Fatal(configReadError)
+	}
+
+	config := strings.Split(string(configBuf), "\n")
+
+	if len(strings.Split(string(config[0]), ":")) == 1 {
+		config[0] = fmt.Sprintf("%s:64738", config[0])
+	}
+
+	server := flag.String("server", config[0], "server name and port to connect")
+	username := flag.String("username", config[1], "the username of the client")
+	password := flag.String("password", config[2], "the password of the server")
 
 	flag.Parse()
 
@@ -108,13 +118,18 @@ func (i *Intercom) initGPIO() {
 		i.GPIOEnabled = true
 	}
 
-	ButtonPinPullUp := rpio.Pin(17)
+	LedPin := rpio.Pin(26)
+	LedPin.Mode(rpio.Output)
+	LedPin.Low()
+
+	ButtonPinPullUp := rpio.Pin(16)
 	ButtonPinPullUp.PullUp()
 
-	rpio.Close()
+	// rpio.Close()
 
 	// unfortunately the gpio watcher stuff doesnt work for me in this context, so we have to poll the button instead
-	i.Button = gpio.NewInput(17)
+	i.Button = gpio.NewInput(16)
+	i.Led = LedPin
 	go func() {
 		for {
 			currentState, err := i.Button.Read()
@@ -127,7 +142,9 @@ func (i *Intercom) initGPIO() {
 						fmt.Printf("Button is released\n")
 						volume.SetVolume(i.Volume)
 						i.Stream.StopSource()
+						i.Led.Low()
 					} else {
+						i.Led.High()
 						fmt.Printf("Button is pressed\n")
 						v, _ := volume.GetVolume()
 						i.Volume = v
